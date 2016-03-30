@@ -1,9 +1,7 @@
 class DeploymentService
   def all_data
     {
-      :providers              => possible_providers_and_vms_for_provisioning,
-      :cloud_init_template_id => cloud_init_template_id,
-      :supported_types        => deployment_types
+      :providers              => possible_providers_and_vms_for_provisioning
     }.compact
   end
 

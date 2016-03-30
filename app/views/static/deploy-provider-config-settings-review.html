@@ -1,0 +1,35 @@
+<div ng-controller="containers.deployProviderReviewController">
+  <form role="form">
+    <div class="checkbox">
+      <label>
+        <input type="checkbox" ng-model="data.configureRouter">Configure router
+      </label>
+    </div>
+    <div class="checkbox">
+      <label>
+        <input type="checkbox" ng-model="data.configureRegistry">Configure registry
+      </label>
+    </div>
+    <div class="miq-radio-form" ng-if="data.configureRegistry">
+      <div class="checkbox">
+        <label>
+          <input type="checkbox" ng-model="data.useDefaultRegistry" ng-disabled="!data.configureRegistry">Use default registry configured above
+        </label>
+      </div>
+      <div class="checkbox">
+        <label>
+          <input type="checkbox" ng-model="data.useS3Registry" ng-disabled="!data.configureRegistry">Use S3
+        </label>
+      </div>
+      <div class="checkbox">
+        <label>
+          <input type="checkbox" ng-model="data.useSwift" ng-disabled="!data.configureRegistry">Use Swift
+        </label>
+      </div>
+    </div>
+    <div class="checkbox">
+      <label>
+        <input type="checkbox" ng-model="data.configureMetrics">Configure metrics
+      </label>
+    </div>
+  </form></div>
