@@ -1,24 +1,20 @@
 def find_vm_by_tag(tag)
-  tag = "/managed/miq_openstack_deploy/#{tag}_#{$evm.root['automation_task'][:id]}"
+  tag = "/managed/miq_openshift_deploy/#{tag}_#{$evm.root['automation_task'][:id]}"
   $evm.vmdb(:vm).find_tagged_with(:any => tag, :ns => "*")
 end
 
 def assign_vms_to_deployment_nodes(masters, nodes)
-  deployment = $evm.vmdb(:container_deployment).find(
+  $evm.root['container_deployment'] = $evm.vmdb(:container_deployment).find(
     $evm.root['automation_task'].automation_request.options[:attrs][:deployment_id])
   masters.each do |master|
-    deployment.assign_container_deployment_node(master.id, "master")
+    $evm.root['container_deployment'].assign_container_deployment_node(master.id, "master")
   end
   nodes.each do |node|
-    deployment.assign_container_deployment_node(node.id, "node")
+    $evm.root['container_deployment'].assign_container_deployment_node(node.id, "node")
   end
-  $evm.root['deployment_master'] = deployment.roles_addresses("deployment_master")
-  $evm.root['inventory'] = deployment.regenerate_ansible_inventory
-  $evm.root['rhel_subscribe_inventory'] =  deployment.regenerate_ansible_subscription_inventory
-end
-
-def missing_subscription_fields?
-  $evm.root['rhsub_user'].nil? || $evm.root['rhsub_pass'].nil? || $evm.root['rhsub_sku'].nil?
+  $evm.root['deployment_master'] = $evm.root['container_deployment'].roles_addresses("deployment_master")
+  $evm.root['inventory'] = $evm.root['container_deployment'].regenerate_ansible_inventory
+  $evm.root['rhel_subscribe_inventory'] = $evm.root['container_deployment'].regenerate_ansible_subscription_inventory
 end
 
 def extract_ips(vms)
@@ -29,7 +25,7 @@ def extract_ips(vms)
   ips
 end
 
-def wait_for_ip_adresses
+def wait_for_ip_addresses
   $evm.root['state'] = "post_provision"
   $evm.root['automation_task'].message = "Trying to receive ips"
   tagged_vms_masters = find_vm_by_tag("master")
@@ -61,5 +57,12 @@ def refresh_provider
   end
 end
 
-$evm.log(:info, "********************** #{$evm.root['ae_state']} ***************************")
-wait_for_ip_adresses
+begin
+  $evm.log(:info, "********************** #{$evm.root['ae_state']} ***************************")
+  wait_for_ip_addresses
+rescue => err
+  $evm.log(:error, "[#{err}]\n#{err.backtrace.join("\n")}")
+  $evm.root['ae_result'] = 'error'
+  $evm.root['ae_reason'] = "Error: #{err.message}"
+  exit MIQ_ERROR
+end

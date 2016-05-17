@@ -9,4 +9,11 @@ def pre_validate
            "| Message: #{$evm.root['automation_task'].message}")
 end
 
-pre_validate
+begin
+  pre_validate
+rescue => err
+  $evm.log(:error, "[#{err}]\n#{err.backtrace.join("\n")}")
+  $evm.root['ae_result'] = 'error'
+  $evm.root['ae_reason'] = "Error: #{err.message}"
+  exit MIQ_ERROR
+end

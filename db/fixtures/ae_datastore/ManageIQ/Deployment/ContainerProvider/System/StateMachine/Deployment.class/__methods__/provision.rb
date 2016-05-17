@@ -4,10 +4,10 @@ end
 
 def create_custom_tag(name)
   tag_name = "#{name}_#{$evm.root['automation_task'][:id]}"
-  unless $evm.execute('tag_exists?', 'miq_openstack_deploy', tag_name)
+  unless $evm.execute('tag_exists?', 'miq_openshift_deploy', tag_name)
     $evm.log(:info, "********************** creating tag ***************************")
     $evm.execute('tag_create',
-                 'miq_openstack_deploy',
+                 'miq_openshift_deploy',
                  :name        => tag_name,
                  :description => tag_name)
   end
@@ -16,9 +16,9 @@ end
 def tagged_tasks
   tasks = []
   $evm.vmdb('miq_provision_request').all.each do |prov|
-    next unless prov.get_tags[:miq_openstack_deploy] &&
-      (prov.get_tags[:miq_openstack_deploy].include?(get_custom_tag("master")) ||
-        prov.get_tags[:miq_openstack_deploy].include?(get_custom_tag("node")))
+    next unless prov.get_tags[:miq_openshift_deploy] &&
+                (prov.get_tags[:miq_openshift_deploy].include?(get_custom_tag("master")) ||
+                  prov.get_tags[:miq_openshift_deploy].include?(get_custom_tag("node")))
     tasks << prov
   end
   tasks
@@ -28,7 +28,7 @@ def create_provision_requests(vm_base_name, num_of_vms, args, type)
   (1..num_of_vms).each do |num|
     args[2]['vm_name'] = vm_base_name + "_" + num.to_s
     request            = $evm.execute('create_provision_request', *args)
-    request.add_tag("miq_openstack_deploy", type + '_' + $evm.root['automation_task'][:id].to_s)
+    request.add_tag("miq_openshift_deploy", type + '_' + $evm.root['automation_task'][:id].to_s)
   end
 end
 
@@ -82,15 +82,22 @@ def provision
 end
 
 def create_custom_tags
-  unless $evm.execute('category_exists?', 'miq_openstack_deploy')
+  unless $evm.execute('category_exists?', 'miq_openshift_deploy')
     $evm.log(:info, "********************** creating deployment category ***************************")
     $evm.execute('category_create',
-                 :name         => 'miq_openstack_deploy',
+                 :name         => 'miq_openshift_deploy',
                  :single_value => false,
-                 :description  => 'miq_openstack_deploy')
+                 :description  => 'miq_openshift_deploy')
   end
   create_custom_tag("master")
   create_custom_tag("node")
 end
 
-provision
+begin
+  provision
+rescue => err
+  $evm.log(:error, "[#{err}]\n#{err.backtrace.join("\n")}")
+  $evm.root['ae_result'] = 'error'
+  $evm.root['ae_reason'] = "Error: #{err.message}"
+  exit MIQ_ERROR
+end
