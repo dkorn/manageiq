@@ -1,0 +1,15 @@
+.wizard-miq-review-item
+  .wizard-miq-review-item-field
+    = "{{data.masters.length}} " + _("%{master}") % {:master => "{{data.masters.length === 1 ? 'Master' : 'Masters'}}"}
+  .wizard-miq-review-item-field
+    = "{{data.nodes.length}} " + _(%{node}) % {:node => "{{data.nodes.length === 1 ? 'Node' : 'Nodes'}}"}
+  .wizard-miq-review-item-field
+    = "{{data.storageNodes.length}} " + _("Storage")
+  .wizard-miq-review-item-field
+    = "{{data.loadBalancerNodes.length}} " + _("%{lb}") % {:lb => "{{data.loadBalancerNodes.length === 1 ? 'Load Balancer' : 'Load Balancers'}}"}
+  .wizard-miq-review-item-field
+    = "{{data.dnsNodes.length}} " + _("DNS")
+  .wizard-miq-review-item-field
+    = "{{data.etcdNodes.length}} " + _(%{etcd}) % {:etcd => "{{data.etcdNodes.length === 1 ? 'Etcd' : 'Etcds'}}"}
+  .wizard-miq-review-item-field
+    = "{{data.infrastructureNodes.length}} " + _("%{infra}") % {:infra => "{{data.infrastructureNodes.length === 1 ? 'Infrastructure' : 'Infrastructures'}}"}
