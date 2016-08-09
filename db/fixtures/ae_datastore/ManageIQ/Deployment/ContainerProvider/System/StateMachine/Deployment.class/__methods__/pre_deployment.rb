@@ -1,6 +1,14 @@
 LOCAL_BOOK = 'local_book.yaml'.freeze
 REPO_URL   = "https://copr.fedorainfracloud.org/coprs/maxamillion/origin-next/repo/epel-7/maxamillion-origin-next-epel-7.repo".freeze
 
+def create_puddle_repo
+  File.open("temp.repo", "w") do |f|
+    f.write("[temp]\nname=alontemp\nbaseurl=http://download.lab.bos.redhat.com/rcm-guest/puddles/RHAOS/AtomicOpenShift/3.2/2016-08-04.1/x86_64/os\nenabled=1\ngpgcheck=0")
+  end
+  $evm.root['container_deployment'].perform_scp($evm.root['deployment_master'], $evm.get_state_var(:ssh_user), "temp.repo", "temp.repo")
+  $evm.root['container_deployment'].perform_agent_commands($evm.root['deployment_master'], $evm.get_state_var(:ssh_user), ["sudo mv ~/temp.repo /etc/yum.repos.d/temp.repo"])
+end
+
 def pre_deployment(user, deployment_master, deployment)
   $evm.log(:info, "********************** #{$evm.root['ae_state']} ***************************")
   deployment.perform_scp(deployment_master, user, "inventory.yaml", "inventory.yaml")
@@ -15,6 +23,7 @@ def pre_deployment(user, deployment_master, deployment)
                      "sudo yum install centos-release-paas-common centos-release-openshift-origin -y")
   elsif release.include?("Red Hat Enterprise Linux")
     deployment.subscribe_deployment_master(deployment_master, user)
+    create_puddle_repo
   end
   deployment.perform_agent_commands(deployment_master, user, commands)
   if release.include?("Red Hat Enterprise Linux") && deployment.nodes_subscription_needed?
